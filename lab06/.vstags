@@ -4,6 +4,5 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
-get_whales_list	whale_summary.pl	41;"	s
-name_convert	whale_summary.pl	8;"	s
-species_count	whale_summary.pl	20;"	s
+name_convert	whale_summary.pl	6;"	s
+read_pre	prereq.pl	3;"	s
