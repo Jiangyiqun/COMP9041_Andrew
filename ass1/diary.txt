@@ -1,0 +1,192 @@
+# Legit Documentation
+
+## Diary
+
+Date   | Start | Stop  | Activity  | Comments
+-------|-------|-------|-----------|-----------------------------------------------------
+25 Sep | 08:00 | 13:00 | Reading   | understanding the specification; write documentation
+29 Sep | 08:00 | 23:00 | Designing | write documentation; write code for subset 0
+30 Sep | 09:00 | 23:00 | Coding    | write code for subset 0 & 1 & 2
+01 Oct | 10:00 | 18:00 | Debuging  | write code for subset 2; debug code for subset 0 & 1
+
+## Introduction
+
+- Author: Jack Jiang
+- Date: 29th Sep. 2018
+- For COMP9041 2018 S2 [assignment 1](https://cgi.cse.unsw.edu.au/~cs2041/18s2/assignments/ass1/index.html)
+
+## Internal Data Storage
+
+-.legit
+    - HEAD (file)
+    - index
+    - objects
+    - commit
+        - commit number
+        - commit number (file)
+    - branch
+        - branch name (file)
+
+Reference:
+- [Git Internals - How Git works](https://www.linkedin.com/pulse/git-internals-how-works-kaushik-rangadurai)
+- [10.2 Git Internals - Git Objects](https://git-scm.com/book/id/v2/Git-Internals-Git-Objects)
+
+### HEAD file
+
+```txt
+current branch name
+last commit number
+```
+
+### index folder
+
+copy of all files in staging aera
+
+### objects/commit folder
+
+- commit number folder
+```txt
+this is a folder contains copy of all files of this commit
+```
+- commit number file
+```txt
+commit messeage
+```
+
+### objects/branch folder
+
+- branch name file
+```txt
+"commit number a" "commit number b" "commit number c" "commit number d"
+```
+
+## Legit Commands Implementation
+
+### legit.pl init
+
+create basic data structure and master branch
+
+### legit.pl add filenames
+
+copy to .legit/index folder
+
+### legit.pl log
+
+1. find current branch name in HEAD
+2. search objects/branch/branch name
+3. search objects/commit/commit number
+4. display commit number and message of current branch
+
+### legit.pl show commit:filename
+
+show file content in objects/commit/commit number
+
+### legit.pl commit [-a] -m message
+
+1. find last commit number in HEAD
+2. search files in objects/commit/last commit number
+3. add files in last commit but not in index to index
+
+Commit table:
+
+status                                           |commit|commit -a
+-------------------------------------------------|------|-------------
+untracked                                        |no    |no
+added to index                                   |yes   |yes
+deleted                                          |yes   |yes
+file deleted                                     |no    |rm from index
+same as repo                                     |no    |no
+file changed, changes not staged for commit      |no    |add to index
+file changed, changes staged for commit          |yes   |yes
+file changed, different changes staged for commit|yes   |add to index
+
+### legit.pl rm [--force] [--cached] filenames
+
+- no --cached
+  - remove file in index and working directory
+- has --cached flage
+  - remove file in index
+
+Remove permission level talbe:
+
+- force mode (both cached and non-cached):
+
+index|./  |commit|status
+-----|----|------|-------------------------------------------------
+ no  | _  | _    |'x' is not in the legit repository
+
+- cached mode (non-force)
+
+index|./  |commit  |status
+-----|----|--------|-------------------------------------------------
+ A   | B  | C or no|'a' in index is different to both working file and repository
+
+- non-cached mode (non-force):
+
+index|./  |commit  |status
+-----|----|--------|-------------------------------------------------
+ A   | A  | B or no|'b' has changes staged in the index
+ A   | B  | A or B |'c' in repository is different to working file
+
+- free mode
+
+index|./  |commit|status
+-----|----|------|-------------------------------------------------
+ A   | A  | A    |free to remove
+ A   | no | _    |free to remove
+
+
+### legit.pl status
+
+Status table:
+
+index|./  |commit|status
+-----|----|------|-------------------------------------------------
+ no  |no  | _    |deleted
+ no  |A   | _    |untracked
+ A   |_   | no   |added to index
+ A   |no  | A    |file deleted
+ A   |A   | A    |same as repo
+ A   |B   | A    |file changed, changes not staged for commit
+ A   |no  | B    |added to index
+ A   |A   | B    |file changed, changes staged for commit
+ A   |~A  | B    |file changed, different changes staged for commit
+
+Reference:
+
+- [Git Basics - Recording Changes to the Repository](https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository)
+
+### legit.pl branch [-d] [branch-name]
+
+- create branch
+  - create objects/branch/branch name, add copy current branch file to it
+- remove branch
+  - just remove objects/branch/branch name
+  - could not remove current branch
+    - `legit.pl: error: internal error error: Cannot delete branch 'b'`
+  - could not remove master branch
+    - `legit.pl: error: can not delete branch 'master'`
+  - could not remove non-exist branch
+    - `legit.pl: error: branch 'x' does not exist`
+
+### legit.pl checkout branch-name
+
+- change current branch in HEAD
+- do not change working directory
+- do not change index
+
+### legit.pl merge branch-name|commit -m message
+
+- current commit >= merge commit
+  - `Already up to date`
+- current commit < merge commit
+  - no diverge
+    - `Fast-forward: no commit created`
+  - has diverge
+    - no conflict
+    - conflict
+      - `legit.pl: error: These files can not be merged:`
+
+Reference:
+- [Fast-Forward Git Merge](https://ariya.io/2013/09/fast-forward-git-merge)
+- [3.1 Git Branching - Branches in a Nutshell](https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell)
