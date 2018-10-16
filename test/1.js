@@ -1,1 +1,0 @@
-alart("Hello world")
